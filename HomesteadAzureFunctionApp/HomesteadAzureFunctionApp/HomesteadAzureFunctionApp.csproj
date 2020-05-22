@@ -5,6 +5,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.29" />
+    <PackageReference Include="WebPush-NetCore" Version="1.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Dto\PushPayloadDto.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

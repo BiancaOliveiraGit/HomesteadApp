@@ -3,7 +3,7 @@
 
 namespace HomesteadAzureFunctionApp
 {
-    public static class MockDB
+    public static class MockSeasonDB
     {
         public static List<SeasonData> GetSeasonData()
         {
