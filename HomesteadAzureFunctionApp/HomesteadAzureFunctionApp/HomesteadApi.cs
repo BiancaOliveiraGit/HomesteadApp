@@ -39,7 +39,31 @@ namespace HomesteadAzureFunctionApp
                 : new BadRequestObjectResult("Error. No Season Data Found.");
         }
 
+        [FunctionName("SaveSubscription")]
+        public static async Task<IActionResult> RunSaveSubscription(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/push-subscription")] HttpRequest req, ILogger log, ExecutionContext context)
+        {
+            log.LogInformation("HomesteadApi/SaveSubscription HTTP trigger function processed a request.");
 
+            // Using this setup allows Environment Variables to be set via local settings in development, and App Settings in Azure
+            var config = new ConfigurationBuilder()
+                            .SetBasePath(context.FunctionAppDirectory)
+                            .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                            .AddEnvironmentVariables()
+                            .Build();
+
+            //string name = req.Query["name"];
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            //dynamic data = JsonConvert.DeserializeObject(requestBody);
+            //name = name ?? data?.name;
+            var blobStorage = new BlobService(config);
+            var isSaved = await blobStorage.PostBlobStorage(requestBody);
+
+            return isSaved 
+                ? (ActionResult)new OkObjectResult(isSaved)
+                : new BadRequestObjectResult("Error. Error on posting subscription to blob storage");
+        }
 
         [FunctionName("TemplateFunction")]
         public static async Task<IActionResult> RunTemplate(
