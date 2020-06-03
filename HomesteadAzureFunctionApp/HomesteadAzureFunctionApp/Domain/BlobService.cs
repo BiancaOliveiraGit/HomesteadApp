@@ -56,13 +56,14 @@ namespace HomesteadAzureFunctionApp.Domain
                 CloudBlobClient client;
                 CloudBlobContainer container;
                 CloudBlockBlob blob;
+                string blobName = Guid.NewGuid() + "push-subcription";
                 GetConnection();
 
                 client = StorageAccount.CreateCloudBlobClient();
                 container = client.GetContainerReference("homestead-subscriptions");
                 await container.CreateIfNotExistsAsync();
 
-                blob = container.GetBlockBlobReference(data);
+                blob = container.GetBlockBlobReference(blobName);
                 blob.Properties.ContentType = "application/json";
 
                 using (Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
