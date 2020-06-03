@@ -7,8 +7,10 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using HomesteadAzureFunctionApp.API;
+using HomesteadAzureFunctionApp.Domain;
+using System.Linq;
 
 namespace HomesteadAzureFunctionApp
 {
@@ -21,12 +23,7 @@ namespace HomesteadAzureFunctionApp
             log.LogInformation("HomesteadApi/GetSeasonData HTTP trigger function processed a request.");
 
             // Using this setup allows Environment Variables to be set via local settings in development, and App Settings in Azure
-            var config = new ConfigurationBuilder()
-                            .SetBasePath(context.FunctionAppDirectory)
-                            .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                            .AddEnvironmentVariables()
-                            .Build();
-
+            var config = StartupConfiguration.GetConfiguration(context);
             //string name = req.Query["name"];
 
             //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -41,18 +38,12 @@ namespace HomesteadAzureFunctionApp
 
         [FunctionName("SaveSubscription")]
         public static async Task<IActionResult> RunSaveSubscription(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/push-subscription")] HttpRequest req, ILogger log, ExecutionContext context)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/subscriptions")] HttpRequest req, ILogger log, ExecutionContext context)
         {
             log.LogInformation("HomesteadApi/SaveSubscription HTTP trigger function processed a request.");
 
             // Using this setup allows Environment Variables to be set via local settings in development, and App Settings in Azure
-            var config = new ConfigurationBuilder()
-                            .SetBasePath(context.FunctionAppDirectory)
-                            .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                            .AddEnvironmentVariables()
-                            .Build();
-
-            //string name = req.Query["name"];
+            var config = StartupConfiguration.GetConfiguration(context);
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             //dynamic data = JsonConvert.DeserializeObject(requestBody);
@@ -63,6 +54,24 @@ namespace HomesteadAzureFunctionApp
             return isSaved 
                 ? (ActionResult)new OkObjectResult(isSaved)
                 : new BadRequestObjectResult("Error. Error on posting subscription to blob storage");
+        }
+
+        [FunctionName("GetSubscription")]
+        public static async Task<IActionResult> RunGetSubscription(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/subscriptions")] HttpRequest req, ILogger log, ExecutionContext context)
+        {
+            log.LogInformation("HomesteadApi/getSubscription HTTP trigger function processed a request.");
+
+            // Using this setup allows Environment Variables to be set via local settings in development, and App Settings in Azure
+            var config = StartupConfiguration.GetConfiguration(context);
+
+            var blobStorage = new BlobService(config);
+            var subscriptions = await blobStorage.GetBlobStorage();
+            //TODO serialize subscriptions to PushSubscriptions
+
+            return subscriptions.Any()
+                ? (ActionResult)new OkObjectResult(subscriptions)
+                : new BadRequestObjectResult("Error. Error on get subscriptions from blob storage");
         }
 
         [FunctionName("TemplateFunction")]
